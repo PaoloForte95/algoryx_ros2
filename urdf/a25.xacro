@@ -1,0 +1,334 @@
+<?xml version="1.0"?>
+
+<robot name="a25" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:arg name="only_velocity_steering" default="false" />
+
+  <!-- Import all Gazebo-customization elements, including Gazebo colors -->
+  <xacro:if value="$(arg only_velocity_steering)">
+    <xacro:include filename="$(find a25_description)/urdf/a25_only_velocity_steering.gazebo" />
+  </xacro:if>
+  <xacro:unless value="$(arg only_velocity_steering)">
+    <xacro:include filename="$(find a25_description)/urdf/a25.gazebo" />
+  </xacro:unless>
+  <!-- Import Rviz colors -->
+  <xacro:include filename="$(find a25_description)/urdf/materials.xacro" />
+
+  <xacro:property name="wheel_radius" value="0.8" />  <!-- collision property -->
+  <xacro:property name="wheel_thickness" value="0.1" /> <!-- collision property -->
+  <xacro:property name="joint_height_above_ground" value="1.2" /> <!-- 0.4 + wheel radius -->  
+  <xacro:property name="front_axis_length" value="1.2" /> 
+  <xacro:property name="rear_axis_length" value="3.8" /> 
+
+  <!-- base_link is a fictitious link(frame) that is on the ground - a root link without any intertia -->
+    <link name="base_link">
+    </link>
+
+    <joint name="base_link_joint" type="fixed">
+      <origin xyz="-${front_axis_length} 0 ${joint_height_above_ground}" rpy="0 0 0" />
+      <child link="front_link" />
+      <parent link="base_link"/>
+    </joint>
+
+
+  <!-- front Link -->
+  <link name="front_link">
+    <inertial>
+      <origin xyz="${front_axis_length} 0 0" rpy="0 0 0"/>
+      <mass value="20"/>
+      <inertia ixx="20" ixy="0" ixz="0" iyy="20" iyz="0" izz="20" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+	      <mesh filename="package://a25_description/meshes/pull_unit_scaled_no_wheels_rotated.stl" scale = "1.0 1.0 1.0" />
+      </geometry>
+      <material name="yellow"/>
+    </visual>
+    
+    <!-- <collision>
+      <origin xyz="1.6 0 0.15" rpy="0 0 0" />
+      <geometry>
+        <box size="3.4 1.2 0.6" />
+      </geometry>
+    </collision> -->
+  </link>
+
+  <link name="front_link_axis">
+  </link>
+
+  <joint name="front_link_axis_joint" type="fixed">
+      <origin xyz="${front_axis_length} 0 0" rpy="0 0 0" />
+      <child link="front_link_axis" />
+      <parent link="front_link"/>
+  </joint>
+
+  <link name="range_sensor_link">
+  </link>
+
+  <joint name="range_sensor_link_joint" type="fixed">
+      <origin xyz="0 0 2.0" rpy="0 0 0" />
+      <child link="range_sensor_link" />
+      <parent link="front_link_axis"/>
+  </joint>
+
+  <!-- rear Link -->
+  <link name="rear_link">
+    <inertial>
+      <origin xyz="-${rear_axis_length} 0 0" rpy="0 0 0"/>
+      <mass value="20"/>
+      <inertia ixx="20" ixy="0" ixz="0" iyy="20" iyz="0" izz="20" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://a25_description/meshes/load_unit_scaled_no_wheels_rotated.stl" scale = "1.0 1.0 1.0" />
+      </geometry>
+      <material name="yellow"/>
+    </visual>
+    
+    <!-- <collision>
+      <origin xyz="1.8 0 0.7" rpy="0 0 0" />
+      <geometry>
+        <box size="5.6 2 1" />
+      </geometry>
+    </collision> -->
+  </link>
+
+
+  <link name="rear_link_axis">
+  </link>
+
+  <joint name="rear_link_axis_joint" type="fixed">
+      <origin xyz="-${rear_axis_length} 0 0" rpy="0 0 0" />
+      <child link="rear_link_axis" />
+      <parent link="rear_link"/>
+  </joint>
+
+
+  <!-- FRONT -->
+  <!-- Wheel front left -->
+  <link name="wheel_fl_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="-1.57 0 0" />
+      <geometry>
+        <mesh filename="package://a25_description/meshes/wheel_scaled.stl" scale = "1.0 1.0 1.0" />
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    
+    <collision>
+      <origin xyz="0 0 0" rpy="-1.57 0 0" />
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_thickness}" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_left_wheel_joint" type="continuous">
+    <parent link="front_link"/>
+    <child link="wheel_fl_link"/>
+    <origin xyz="${front_axis_length} 1.1 -0.4" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+  <!-- Wheel front right -->
+  <link name="wheel_fr_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57 0 0" />
+      <geometry>
+        <mesh filename="package://a25_description/meshes/wheel_scaled.stl" scale = "1.0 1.0 1.0" />
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    
+    <collision>
+      <origin xyz="0 0 0" rpy="1.57 0 0" />
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_thickness}" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_right_wheel_joint" type="continuous">
+    <parent link="front_link"/>
+    <child link="wheel_fr_link"/>
+    <origin xyz="${front_axis_length} -1.1 -0.4" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+
+  <!-- BACK -->
+  <!-- Wheel back left -->
+  <link name="wheel_bl_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="-1.57 0 0" />
+      <geometry>
+        <mesh filename="package://a25_description/meshes/wheel_scaled.stl" scale = "1.0 1.0 1.0" />
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    
+    <collision>
+      <origin xyz="0 0 0" rpy="-1.57 0 0" />
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_thickness}" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="back_left_wheel_joint" type="continuous">
+    <parent link="rear_link"/>
+    <child link="wheel_bl_link"/>
+    <origin xyz="-2.95 1.1 -0.4" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+  <!-- Wheel back right -->
+  <link name="wheel_br_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57 0 0" />
+      <geometry>
+        <mesh filename="package://a25_description/meshes/wheel_scaled.stl" scale = "1.0 1.0 1.0" />
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    
+    <collision>
+      <origin xyz="0 0 0" rpy="1.57 0 0" />
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_thickness}" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="back_right_wheel_joint" type="continuous">
+    <parent link="rear_link"/>
+    <child link="wheel_br_link"/>
+    <origin xyz="-2.95 -1.1 -0.4" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+
+  <!-- Wheel radius = 0.8 -->
+
+  <!-- Wheel back left2 -->
+  <link name="wheel_bl2_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="-1.57 0 0" />
+      <geometry>
+        <mesh filename="package://a25_description/meshes/wheel_scaled.stl" scale = "1.0 1.0 1.0" />
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    
+    <collision>
+      <origin xyz="0 0 0" rpy="-1.57 0 0" />
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_thickness}" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="back_left_wheel2_joint" type="continuous">
+    <parent link="rear_link"/>
+    <child link="wheel_bl2_link"/>
+    <origin xyz="-4.65 1.1 -0.4" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+  <!-- Wheel back right -->
+  <link name="wheel_br2_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57 0 0" />
+      <geometry>
+        <mesh filename="package://a25_description/meshes/wheel_scaled.stl" scale = "1.0 1.0 1.0" />
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    
+    <collision>
+      <origin xyz="0 0 0" rpy="1.57 0 0" />
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_thickness}" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="back_right_wheel2_joint" type="continuous">
+    <parent link="rear_link"/>
+    <child link="wheel_br2_link"/>
+      <origin xyz="-4.65 -1.1 -0.4" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+
+
+
+  <!-- Joint Link -->
+  <!-- <link name="yawsteeringhub_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.1 0.1 0.2" />
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="front2yawsteeringhub_joint" type="revolute">
+    <parent link="front_link"/>
+    <child link="yawsteeringhub_link"/>
+    <limit effort="1000.0" lower="-0.9" upper="0.9" velocity="10"/>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <joint name="yawsteeringhub2rear_joint" type="revolute">
+    <parent link="yawsteeringhub_link"/>
+    <child link="rear_link"/>
+    <limit effort="1000.0" lower="-0.9" upper="0.9" velocity="10"/>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <axis xyz="1 0 0" />
+  </joint> -->
+
+
+  <joint name="articulated_steer_joint" type="revolute">
+    <parent link="front_link"/>
+    <child link="rear_link"/>
+    <limit effort="1000.0" lower="-1.2" upper="1.2" velocity="1"/>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+
+</robot>
