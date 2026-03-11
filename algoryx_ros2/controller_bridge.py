@@ -16,8 +16,8 @@ class PandaControllerBridge(Node):
 
         
         cb_group = ReentrantCallbackGroup()
-        ActionServer(self, FollowJointTrajectory, "panda_arm_controller/follow_joint_trajectory", self.execute_arm, callback_group=cb_group)
-        ActionServer(self, FollowJointTrajectory, "panda_hand_controller/follow_joint_trajectory", self.execute_hand, callback_group=cb_group)
+        ActionServer(self, FollowJointTrajectory, "fr3_arm_controller/follow_joint_trajectory", self.execute_arm, callback_group=cb_group)
+        ActionServer(self, FollowJointTrajectory, "fr3_hand_controller/follow_joint_trajectory", self.execute_hand, callback_group=cb_group)
 
     def send_float32_data(self, topic, data):
         msg = agxROS2.StdMsgsFloat32()

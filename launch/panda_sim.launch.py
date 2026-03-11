@@ -1,3 +1,5 @@
+import yaml
+
 from launch import LaunchDescription
 from launch.actions import ExecuteProcess, TimerAction
 from launch.substitutions import LaunchConfiguration
@@ -10,19 +12,35 @@ def generate_launch_description():
     prefix = get_package_prefix('algoryx_ros2')
     script_path = os.path.join(prefix, 'lib', 'algoryx_ros2', 'urdf_panda_ros2.py')
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    config_path = os.path.join(get_package_share_directory('algoryx_ros2'), 'config', 'moveit_controllers.yaml')
-
-    panda_urdf_path = os.path.join(get_package_share_directory('algoryx_ros2'), 'urdf', 'panda.urdf')
-    with open(panda_urdf_path, "r") as f:
+    controllers_path = os.path.join(get_package_share_directory('algoryx_ros2'), 'config', 'moveit_controllers.yaml')
+    config_dir = os.path.join(get_package_share_directory('franka_fr3_moveit_config'), 'config')
+    urdf_path = os.path.join(get_package_share_directory('algoryx_ros2'), 'urdf', 'fr3.urdf')
+    with open(urdf_path, "r") as f:
      robot_description = f.read()
 
+    srdf_path = os.path.join(
+        get_package_share_directory('franka_description'),
+        'robots', 'fr3', 'fr3.srdf.xacro'
+    )
+
+    ompl_planning_path = os.path.join(
+    get_package_share_directory('franka_fr3_moveit_config'), 'config', 'ompl_planning.yaml'
+    )
+
+    with open(ompl_planning_path, 'r') as f:
+        ompl_planning = yaml.safe_load(f)
     
+
     moveit_config = (
-        MoveItConfigsBuilder("panda", package_name="moveit_resources_panda_moveit_config")
-        .robot_description(file_path=panda_urdf_path)
-        .trajectory_execution(file_path=config_path)
+        MoveItConfigsBuilder("fr3", package_name="franka_fr3_moveit_config")
+        .robot_description(file_path=urdf_path)
+        .robot_description_semantic(file_path=srdf_path, mappings={"hand": "true", "ee_id": "franka_hand"})
+        .joint_limits(file_path=os.path.join(config_dir, 'fr3_joint_limits.yaml'))
+        .robot_description_kinematics(file_path=os.path.join(config_dir, 'kinematics.yaml'))
+        .planning_pipelines(pipelines=["ompl"])
+        .trajectory_execution(file_path=controllers_path)
         .to_moveit_configs()
-)
+    )
 
 
     urdf_proc = ExecuteProcess(
@@ -74,9 +92,10 @@ def generate_launch_description():
         output="both",
         parameters=[
             {'use_sim_time': use_sim_time},
-            {"robot_description": robot_description}
-            ],
-        remappings=[("joint_states", "/agx_joint_states")])
+            moveit_config.robot_description,  # <-- use this instead of your separate robot_description
+        ],
+        remappings=[("joint_states", "/agx_joint_states")]
+)
 
     # joint_state_publisher_gui = Node(
     #                                 package="joint_state_publisher_gui",
@@ -90,9 +109,18 @@ def generate_launch_description():
     world2robot_tf_node = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
-        name="static_transform_publisher",
-        output="log",
-        arguments=["--frame-id", "world", "--child-frame-id", "panda_link0"],
+        name="base_to_fr3_link0_tf",
+        output="screen",
+        arguments=["--frame-id", "base", "--child-frame-id", "fr3_link0"],
+        parameters=[{'use_sim_time': use_sim_time}]
+    )
+
+    world2base_tf_node = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="world_to_base_tf",
+        output="screen",
+        arguments=["--frame-id", "world", "--child-frame-id", "base"],
         parameters=[{'use_sim_time': use_sim_time}]
     )
 
@@ -103,9 +131,11 @@ def generate_launch_description():
         parameters=[
             moveit_config.to_dict(),
             {"use_sim_time": use_sim_time},
+            {'ompl': ompl_planning},
         ],
         remappings=[("joint_states", "/agx_joint_states")],
     )
+
     
     ld = LaunchDescription()
 
@@ -113,6 +143,7 @@ def generate_launch_description():
     ld.add_action(sim_bridge_node)
     ld.add_action(controller_bridge_node)
     ld.add_action(rviz_node)
+    ld.add_action(world2base_tf_node)
     ld.add_action(world2robot_tf_node)
     ld.add_action(robot_state_publisher)
     #ld.add_action(joint_state_publisher_gui)

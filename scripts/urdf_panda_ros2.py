@@ -222,15 +222,15 @@ class PandaRobot(agxSDK.StepEventListener):
             self.panda.getConstraint1DOF(joint_name).getMotor1D().setEnable(True)
             self.panda.getConstraint1DOF(joint_name).getMotor1D().setForceRange(-1000, 1000)
 
-        enable_motor1d(self, "panda_joint1")
-        enable_motor1d(self, "panda_joint2")
-        enable_motor1d(self, "panda_joint3")
-        enable_motor1d(self, "panda_joint4")
-        enable_motor1d(self, "panda_joint5")
-        enable_motor1d(self, "panda_joint6")
-        enable_motor1d(self, "panda_joint7")
-        self.panda.getConstraint1DOF("panda_finger_joint1").getLock1D().setEnable(True)
-        self.panda.getConstraint1DOF("panda_finger_joint2").getLock1D().setEnable(True)
+        enable_motor1d(self, "fr3_joint1")
+        enable_motor1d(self, "fr3_joint2")
+        enable_motor1d(self, "fr3_joint3")
+        enable_motor1d(self, "fr3_joint4")
+        enable_motor1d(self, "fr3_joint5")
+        enable_motor1d(self, "fr3_joint6")
+        enable_motor1d(self, "fr3_joint7")
+        self.panda.getConstraint1DOF("fr3_finger_joint1").getLock1D().setEnable(True)
+        self.panda.getConstraint1DOF("fr3_finger_joint2").getLock1D().setEnable(True)
 
 
 
@@ -249,8 +249,8 @@ class PandaRobot(agxSDK.StepEventListener):
             SAVE_IMAGE = True
         
 
-    def post(self, time):
-        self.publish_finger_pos()
+    # def post(self, time):
+    #     self.publish_finger_pos()
 
         
     def publish_finger_pos(self):
@@ -262,18 +262,18 @@ class PandaRobot(agxSDK.StepEventListener):
    
     # Received new ros message, update speed of joint 1
     def received_joint_speeds(self, msg):
-        self.panda.getConstraint1DOF("panda_joint1").getMotor1D().setSpeed(msg.data[0])
-        self.panda.getConstraint1DOF("panda_joint2").getMotor1D().setSpeed(msg.data[1])
-        self.panda.getConstraint1DOF("panda_joint3").getMotor1D().setSpeed(msg.data[2])
-        self.panda.getConstraint1DOF("panda_joint4").getMotor1D().setSpeed(msg.data[3])
-        self.panda.getConstraint1DOF("panda_joint5").getMotor1D().setSpeed(msg.data[4])
-        self.panda.getConstraint1DOF("panda_joint6").getMotor1D().setSpeed(msg.data[5])
-        self.panda.getConstraint1DOF("panda_joint7").getMotor1D().setSpeed(msg.data[6])
+        self.panda.getConstraint1DOF("fr3_joint1").getMotor1D().setSpeed(msg.data[0])
+        self.panda.getConstraint1DOF("fr3_joint2").getMotor1D().setSpeed(msg.data[1])
+        self.panda.getConstraint1DOF("fr3_joint3").getMotor1D().setSpeed(msg.data[2])
+        self.panda.getConstraint1DOF("fr3_joint4").getMotor1D().setSpeed(msg.data[3])
+        self.panda.getConstraint1DOF("fr3_joint5").getMotor1D().setSpeed(msg.data[4])
+        self.panda.getConstraint1DOF("fr3_joint6").getMotor1D().setSpeed(msg.data[5])
+        self.panda.getConstraint1DOF("fr3_joint7").getMotor1D().setSpeed(msg.data[6])
 
     # Received new ros message, update pos of the gripper
     def received_gripper_pos(self, msg):
-        self.panda.getConstraint1DOF("panda_finger_joint1").getLock1D().setPosition(msg.data)
-        self.panda.getConstraint1DOF("panda_finger_joint2").getLock1D().setPosition(msg.data)
+        self.panda.getConstraint1DOF("fr3_finger_joint1").getLock1D().setPosition(msg.data)
+        self.panda.getConstraint1DOF("fr3_finger_joint2").getLock1D().setPosition(msg.data)
 
     # Received new ros message, reset all joints
     def received_reset_pos(self, msg):
@@ -413,10 +413,8 @@ def buildScene():
     )
 
     # Read the URDF file
-    urdf_file = os.path.join(os.getenv("AGX_DIR"), "data/models/URDF/panda/panda.urdf")
-    package_path = os.path.join(
-        os.getenv("AGX_DIR"), "data/models/URDF/panda/franka_ros-kinetic"
-    )
+    urdf_file = os.path.join("src/algoryx_ros2/urdf/fr3.urdf")
+    package_path = os.path.join("/home/pofe/franka_ros2_ws/src/")
 
     # Determines if the base link of the URDF model should be attached to the
     # world or not. Default is false.
@@ -462,8 +460,8 @@ def buildScene():
     # Create the Panda robot representation with a ROS2 subscriber
     panda = PandaRobot(panda_assembly_ref.get())
 
-    panda.panda.getConstraint1DOF("panda_finger_joint1").getLock1D().setPosition(0.01)
-    panda.panda.getConstraint1DOF("panda_finger_joint2").getLock1D().setPosition(0.01)
+    #panda.panda.getConstraint1DOF("panda_finger_joint1").getLock1D().setPosition(0.01)
+    #panda.panda.getConstraint1DOF("panda_finger_joint2").getLock1D().setPosition(0.01)
 
     sim.add(panda)
 
@@ -480,21 +478,21 @@ def buildScene():
     )
 
     control_joint_names = [
-        "panda_joint1",
-        "panda_joint2",
-        "panda_joint3",
-        "panda_joint4",
-        "panda_joint5",
-        "panda_joint6",
-        "panda_joint7",
+        "fr3_joint1",
+        "fr3_joint2",
+        "fr3_joint3",
+        "fr3_joint4",
+        "fr3_joint5",
+        "fr3_joint6",
+        "fr3_joint7",
     ]
 
     for name in control_joint_names:
         if not panda_arm_control_interface.addJoint(panda.panda.getConstraint1DOF(name), agxROS2.ROS2ControlInterface.VELOCITY):
             print("Could not add joint ", name)
 
-    panda_arm_control_interface.addJoint(panda.panda.getConstraint1DOF("panda_finger_joint1"), agxROS2.ROS2ControlInterface.POSITION)
-    panda_arm_control_interface.addJoint(panda.panda.getConstraint1DOF("panda_finger_joint2"), agxROS2.ROS2ControlInterface.POSITION)
+    panda_arm_control_interface.addJoint(panda.panda.getConstraint1DOF("fr3_finger_joint1"), agxROS2.ROS2ControlInterface.POSITION)
+    panda_arm_control_interface.addJoint(panda.panda.getConstraint1DOF("fr3_finger_joint2"), agxROS2.ROS2ControlInterface.POSITION)
     sim.add(panda_arm_control_interface)
 
     # Setup the camera
